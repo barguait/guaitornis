@@ -1,0 +1,46 @@
+{
+  "especies": [
+    {
+      "foto": "images/uploads/cardenal-rojo-01.jpg",
+      "nombre_local": "Cardenal Rojo",
+      "nombre_cientifico": "Paroaria coronata",
+      "fecha": "2026-06-02",
+      "descripcion": "Inconfundible por su cresta y cabeza de un rojo intenso que contrasta con el gris y blanco del cuerpo. Frecuenta montes y zonas arbustivas cerca del agua."
+    },
+    {
+      "foto": "",
+      "nombre_local": "Hornero",
+      "nombre_cientifico": "Furnarius rufus",
+      "fecha": "2026-03-08",
+      "descripcion": "Célebre por construir, cada temporada, un nido de barro en forma de horno sobre postes o ramas gruesas. Su canto en dueto es uno de los sonidos más reconocibles del campo."
+    },
+    {
+      "foto": "",
+      "nombre_local": "Benteveo",
+      "nombre_cientifico": "Pitangus sulphuratus",
+      "fecha": "2026-04-22",
+      "descripcion": "Pecho amarillo intenso y antifaz negro sobre la cabeza. Su canto, similar a bicho-feo, es uno de los más habituales en plazas y jardines de todo el país."
+    },
+    {
+      "foto": "",
+      "nombre_local": "Tero",
+      "nombre_cientifico": "Vanellus chilensis",
+      "fecha": "2026-05-14",
+      "descripcion": "Habita campos abiertos y costas. Muy territorial: ante cualquier intrusión, vuela en círculos emitiendo su característico grito de alarma para proteger el nido."
+    },
+    {
+      "foto": "",
+      "nombre_local": "Zorzal colorado",
+      "nombre_cientifico": "Turdus rufiventris",
+      "fecha": "2026-06-19",
+      "descripcion": "De pecho anaranjado y canto melodioso, suele ser de los primeros en cantar al amanecer. Muy común en jardines, parques y montes urbanos."
+    },
+    {
+      "foto": "",
+      "nombre_local": "Cotorra",
+      "nombre_cientifico": "Myiopsitta monachus",
+      "fecha": "2026-07-05",
+      "descripcion": "Loro pequeño de plumaje verde, muy social y ruidoso. Es la única especie de loro que construye nidos de ramas en lugar de usar huecos en árboles."
+    }
+  ]
+}

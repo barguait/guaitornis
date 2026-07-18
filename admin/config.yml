@@ -1,0 +1,26 @@
+backend:
+  name: git-gateway
+  branch: main
+
+media_folder: "images/uploads"
+public_folder: "images/uploads"
+
+collections:
+  - name: "aves"
+    label: "Catálogo de aves"
+    files:
+      - name: "catalogo"
+        label: "Aves fotografiadas"
+        file: "content/aves.json"
+        format: "json"
+        fields:
+          - label: "Especies"
+            name: "especies"
+            widget: "list"
+            summary: "{{nombre_local}} — {{nombre_cientifico}}"
+            fields:
+              - { label: "Foto", name: "foto", widget: "image", required: false }
+              - { label: "Nombre local", name: "nombre_local", widget: "string" }
+              - { label: "Nombre científico", name: "nombre_cientifico", widget: "string" }
+              - { label: "Fecha de captura", name: "fecha", widget: "date" }
+              - { label: "Descripción breve", name: "descripcion", widget: "text" }
