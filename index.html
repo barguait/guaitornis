@@ -106,6 +106,14 @@
     overflow: hidden;
     display:flex;
     flex-direction:column;
+    width: 100%;
+    font: inherit;
+    text-align: left;
+    color: inherit;
+    padding: 0;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
     transition: border-color 0.2s ease, transform 0.2s ease;
   }
 
@@ -218,6 +226,119 @@
     color: var(--ink-soft);
   }
 
+  /* ---------- Modal ---------- */
+
+  body.modal-open{
+    overflow: hidden;
+  }
+
+  .modal-overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(10,11,8,0.78);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 2rem 1.25rem;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .modal-overlay.open{
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .modal{
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    width: 100%;
+    max-width: 620px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    transform: translateY(14px);
+    transition: transform 0.2s ease;
+  }
+
+  .modal-overlay.open .modal{
+    transform: translateY(0);
+  }
+
+  .modal-close{
+    position:absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 2;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(23,25,18,0.75);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font-size: 1.3rem;
+    line-height: 1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor: pointer;
+  }
+
+  .modal-close:hover{
+    border-color: var(--rust);
+  }
+
+  .modal-photo{
+    position:relative;
+    aspect-ratio: 4 / 3;
+    background: #23261D;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .modal-photo.has-photo{
+    background:#000;
+  }
+
+  .modal-photo img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .modal-icon{
+    width: 96px;
+    height: 60px;
+  }
+
+  .modal-body{
+    padding: 1.5rem 1.5rem 1.75rem;
+  }
+
+  .modal-tag{
+    position: static;
+    display:inline-block;
+    margin-bottom: 0.7rem;
+  }
+
+  .modal-body .local-name{
+    font-size: 1.6rem;
+  }
+
+  .modal-body .description{
+    margin-top: 0.75rem;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .modal-overlay, .modal{ transition:none; }
+  }
+
   /* ---------- Footer ---------- */
 
   footer{
@@ -278,6 +399,20 @@
 
 </div>
 
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalName">
+    <button type="button" class="modal-close" id="modalClose" aria-label="Cerrar ficha">&times;</button>
+    <div class="modal-photo" id="modalPhoto"></div>
+    <div class="modal-body">
+      <span class="catalog-tag modal-tag" id="modalTag"></span>
+      <h2 class="local-name" id="modalName"></h2>
+      <p class="scientific-name" id="modalSci"></p>
+      <p class="capture-date"><time id="modalTime"></time></p>
+      <p class="description" id="modalDesc"></p>
+    </div>
+  </div>
+</div>
+
 <script>
   const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 
@@ -289,8 +424,10 @@
   }
 
   function crearTarjeta(ave, index){
-    const card = document.createElement('article');
+    const card = document.createElement('button');
+    card.type = 'button';
     card.className = 'card';
+    card.setAttribute('aria-haspopup', 'dialog');
 
     const photo = document.createElement('div');
     photo.className = 'card-photo' + (ave.foto ? ' has-photo' : '');
@@ -342,15 +479,13 @@
     dateP.appendChild(time);
     body.appendChild(dateP);
 
-    const desc = document.createElement('p');
-    desc.className = 'description';
-    desc.textContent = ave.descripcion || '';
-    body.appendChild(desc);
-
     card.appendChild(photo);
     card.appendChild(body);
+    card.addEventListener('click', () => abrirModal(index, card));
     return card;
   }
+
+  let currentAves = [];
 
   async function cargarAves(){
     const grid = document.getElementById('grid');
@@ -359,6 +494,7 @@
       if(!res.ok) throw new Error('No se encontró content/aves.json');
       const data = await res.json();
       const especies = Array.isArray(data.especies) ? data.especies : [];
+      currentAves = especies;
 
       grid.innerHTML = '';
 
@@ -379,6 +515,90 @@
   }
 
   cargarAves();
+
+  const modalOverlay = document.getElementById('modalOverlay');
+  const modalClose = document.getElementById('modalClose');
+  const modalPhoto = document.getElementById('modalPhoto');
+  const modalTag = document.getElementById('modalTag');
+  const modalName = document.getElementById('modalName');
+  const modalSci = document.getElementById('modalSci');
+  const modalTime = document.getElementById('modalTime');
+  const modalDesc = document.getElementById('modalDesc');
+
+  let lastTrigger = null;
+
+  function abrirModal(index, triggerEl){
+    const ave = currentAves[index];
+    if(!ave) return;
+    lastTrigger = triggerEl;
+
+    modalTag.textContent = 'GTN-' + String(index + 1).padStart(3, '0');
+    modalName.textContent = ave.nombre_local || 'Sin nombre';
+    modalSci.textContent = ave.nombre_cientifico || '';
+    modalTime.textContent = ave.fecha ? formatFecha(ave.fecha) : '';
+    if(ave.fecha){ modalTime.setAttribute('datetime', ave.fecha); }
+    modalDesc.textContent = ave.descripcion || '';
+
+    modalPhoto.innerHTML = '';
+    modalPhoto.classList.toggle('has-photo', !!ave.foto);
+    if(ave.foto){
+      const img = document.createElement('img');
+      img.src = ave.foto;
+      img.alt = ave.nombre_local || 'Ave fotografiada';
+      modalPhoto.appendChild(img);
+    } else {
+      const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      icon.setAttribute('class', 'bird-icon-placeholder modal-icon');
+      icon.setAttribute('viewBox', '0 0 100 60');
+      icon.innerHTML = '<use href="#bird-icon"></use>';
+      modalPhoto.appendChild(icon);
+
+      const label = document.createElement('span');
+      label.className = 'placeholder-label';
+      label.textContent = 'Foto pendiente';
+      modalPhoto.appendChild(label);
+    }
+
+    modalOverlay.classList.add('open');
+    document.body.classList.add('modal-open');
+    modalClose.focus();
+    document.addEventListener('keydown', onModalKeydown);
+  }
+
+  function cerrarModal(){
+    modalOverlay.classList.remove('open');
+    document.body.classList.remove('modal-open');
+    document.removeEventListener('keydown', onModalKeydown);
+    if(lastTrigger){ lastTrigger.focus(); }
+  }
+
+  function onModalKeydown(e){
+    if(e.key === 'Escape'){
+      cerrarModal();
+      return;
+    }
+    if(e.key === 'Tab'){
+      const focusables = Array.from(
+        modalOverlay.querySelectorAll('button, [href], [tabindex]:not([tabindex="-1"])')
+      );
+      if(focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if(e.shiftKey && document.activeElement === first){
+        e.preventDefault();
+        last.focus();
+      } else if(!e.shiftKey && document.activeElement === last){
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  }
+
+  modalClose.addEventListener('click', cerrarModal);
+  modalOverlay.addEventListener('click', (e) => {
+    if(e.target === modalOverlay){ cerrarModal(); }
+  });
+
 </script>
 
 <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
