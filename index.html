@@ -28,6 +28,7 @@
     background:var(--paper);
     color:var(--ink);
     font-family:'Work Sans', sans-serif;
+    scrollbar-gutter: stable;
   }
 
   body{
@@ -88,6 +89,39 @@
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--moss);
+  }
+
+  /* ---------- Buscador ---------- */
+
+  .search-row{
+    margin: 0;
+  }
+
+  .search-input{
+    display:block;
+    width: 100%;
+    max-width: 320px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    padding: 0.55rem 0.05rem;
+    outline: none;
+    transition: border-color 0.2s ease;
+  }
+
+  .search-input::placeholder{
+    color: var(--ink-soft);
+  }
+
+  .search-input:focus{
+    border-color: var(--moss);
+  }
+
+  .search-input::-webkit-search-cancel-button{
+    filter: invert(0.7);
   }
 
   /* ---------- Grid ---------- */
@@ -389,6 +423,9 @@
   </header>
 
   <main>
+    <div class="search-row">
+      <input type="search" id="searchInput" class="search-input" placeholder="Buscar por nombre…" aria-label="Buscar aves por nombre local o científico">
+    </div>
     <div class="grid" id="grid"></div>
   </main>
 
@@ -487,27 +524,47 @@
 
   let currentAves = [];
 
+  function normalizar(str){
+    return (str || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  }
+
+  function renderGrid(especies){
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
+
+    if(especies.length === 0){
+      const empty = document.createElement('p');
+      empty.className = 'empty-state';
+      empty.textContent = currentAves.length === 0
+        ? 'Todavía no hay especies cargadas. Agregá la primera desde /admin.'
+        : 'No se encontraron aves con ese nombre.';
+      grid.appendChild(empty);
+    } else {
+      especies.forEach((ave) => {
+        const originalIndex = currentAves.indexOf(ave);
+        grid.appendChild(crearTarjeta(ave, originalIndex));
+      });
+    }
+  }
+
+  function filtrarAves(query){
+    const q = normalizar(query).trim();
+    if(!q) return currentAves;
+    return currentAves.filter(ave =>
+      normalizar(ave.nombre_local).includes(q) || normalizar(ave.nombre_cientifico).includes(q)
+    );
+  }
+
   async function cargarAves(){
     const grid = document.getElementById('grid');
     try{
       const res = await fetch('content/aves.json', { cache: 'no-store' });
       if(!res.ok) throw new Error('No se encontró content/aves.json');
       const data = await res.json();
-      const especies = Array.isArray(data.especies) ? data.especies : [];
-      currentAves = especies;
+      currentAves = Array.isArray(data.especies) ? data.especies : [];
 
-      grid.innerHTML = '';
-
-      if(especies.length === 0){
-        const empty = document.createElement('p');
-        empty.className = 'empty-state';
-        empty.textContent = 'Todavía no hay especies cargadas. Agregá la primera desde /admin.';
-        grid.appendChild(empty);
-      } else {
-        especies.forEach((ave, i) => grid.appendChild(crearTarjeta(ave, i)));
-      }
-
-      document.querySelector('.count').textContent = especies.length;
+      renderGrid(currentAves);
+      document.querySelector('.count').textContent = currentAves.length;
     } catch(err){
       grid.innerHTML = '<p class="empty-state">No se pudo cargar el catálogo de aves.</p>';
       console.error(err);
@@ -515,6 +572,11 @@
   }
 
   cargarAves();
+
+  const searchInput = document.getElementById('searchInput');
+  searchInput.addEventListener('input', () => {
+    renderGrid(filtrarAves(searchInput.value));
+  });
 
   const modalOverlay = document.getElementById('modalOverlay');
   const modalClose = document.getElementById('modalClose');
