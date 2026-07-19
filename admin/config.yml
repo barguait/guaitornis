@@ -22,5 +22,5 @@ collections:
               - { label: "Foto", name: "foto", widget: "image", required: false }
               - { label: "Nombre local", name: "nombre_local", widget: "string" }
               - { label: "Nombre científico", name: "nombre_cientifico", widget: "string" }
-              - { label: "Fecha de captura", name: "fecha", widget: "date" }
+              - { label: "Fecha de captura", name: "fecha", widget: "datetime", format: "YYYY-MM-DD", date_format: "YYYY-MM-DD", time_format: false, picker_utc: true }
               - { label: "Descripción breve", name: "descripcion", widget: "text" }
